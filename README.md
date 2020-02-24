@@ -16,7 +16,7 @@ To use this, just instanciate a device and call the temperature method. The temp
 so call it more frequently will only return a cached version
 
 `````python
-import NewKitOn
+from Newkiton import Newkiton
 import time
 
 sensor = NewKitOn.NewKiton(deviceAddr="8e:f9:00:00:00:ed")
