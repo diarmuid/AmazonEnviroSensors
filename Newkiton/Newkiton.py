@@ -68,7 +68,6 @@ class NewKiton(Peripheral):
             # Read the temperature now so that it's cached
         self.temperature()
 
-
     def _get_next_addr(self):
         logging.debug("Getting address of next recording")
         self.writeCharacteristic(0x21, struct.pack(">BHH", 0x1, 0, 0), withResponse=True)
