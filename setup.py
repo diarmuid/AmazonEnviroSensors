@@ -11,7 +11,7 @@ setuptools.setup(
     description="Newkiton temperature sensor",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/Newkiton",
+    url="https://github.com/diarmuid/Newkiton",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
