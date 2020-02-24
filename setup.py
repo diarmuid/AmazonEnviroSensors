@@ -11,6 +11,9 @@ setuptools.setup(
     description="Newkiton temperature sensor",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    install_requires=[
+          'bluepy',
+    ],
     url="https://github.com/diarmuid/Newkiton",
     packages=setuptools.find_packages(),
     classifiers=[
