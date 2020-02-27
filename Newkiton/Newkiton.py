@@ -16,7 +16,7 @@ timeout=1.0
 TenMinutes = datetime.timedelta(minutes=10)
 
 
-class NewKitonDelegate(DefaultDelegate):
+class _NewKitonDelegate(DefaultDelegate):
     """
     Handle the callback from the Peripheral update notifications.
     """
@@ -45,7 +45,7 @@ class NewKitonDelegate(DefaultDelegate):
         return True
 
 
-class NewKiton(Peripheral):
+class Newkiton(Peripheral):
     """
     Class to handle accesses to the NewKiton Bluetooth sensor
     Instanciate the device with deviceAddr argument
@@ -59,17 +59,17 @@ class NewKiton(Peripheral):
         super().__init__(**kwargs)
         self.temperatures = {}
         self._most_recent_timestmap = None
-        self.delagate = NewKitonDelegate()
+        self.delagate = _NewKitonDelegate()
         self.setDelegate(self.delagate)
-        # No idea what this does but seems to be done at the start of the access
-        self.writeCharacteristic(0x25, struct.pack(">H", 0x100), withResponse=True)
-        if self.delagate.read_event.wait(timeout):
-            self.delagate.read_event.clear()
-            # Read the temperature now so that it's cached
         self.temperature()
 
     def _get_next_addr(self):
         logging.debug("Getting address of next recording")
+        # This seems to trigger the update
+        self.writeCharacteristic(0x25, struct.pack(">H", 0x100), withResponse=True)
+        if self.delagate.read_event.wait(timeout):
+            self.delagate.read_event.clear()
+        # Mow actually read the registers
         self.writeCharacteristic(0x21, struct.pack(">BHH", 0x1, 0, 0), withResponse=True)
         if self.delagate.read_event.wait(timeout):
             self.delagate.read_event.clear()
@@ -99,7 +99,8 @@ class NewKiton(Peripheral):
         :rtype: int
         """
         _current_time = datetime.datetime.now()
-        if self._most_recent_timestmap is not None and _current_time - self._most_recent_timestmap < TenMinutes:
+        if self._most_recent_timestmap is not None and (_current_time - self._most_recent_timestmap) < TenMinutes:
+            logging.debug("Reading from cache")
             return self.delagate.readings[self.delagate.last_recorded_address]
         else:
             self._get_next_addr()

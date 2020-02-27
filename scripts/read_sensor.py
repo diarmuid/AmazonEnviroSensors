@@ -5,9 +5,9 @@ import logging
 import time
 
 # Debug option here
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
-sensor = Newkiton.NewKiton(deviceAddr="8e:f9:00:00:00:ed")
+sensor = Newkiton.Newkiton(deviceAddr="8e:f9:00:00:00:ed")
 while True:
     print("Temp={}".format(sensor.temperature()))
     time.sleep(60*10)

@@ -15,7 +15,7 @@ class NewkitonTestcase(unittest.TestCase):
         print(res)
 
     def test_basic(self):
-        s = Newkiton.NewKiton(deviceAddr="8e:f9:00:00:00:12")
+        s = Newkiton.Newkiton(deviceAddr="8e:f9:00:00:00:12")
         s.temperature()
 
 

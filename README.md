@@ -19,7 +19,7 @@ so call it more frequently will only return a cached version
 from Newkiton import Newkiton
 import time
 
-sensor = NewKitOn.NewKiton(deviceAddr="8e:f9:00:00:00:ed")
+sensor = Newkiton.Newkiton(deviceAddr="8e:f9:00:00:00:ed")
 while True:
     print("Temp={}".format(sensor.temperature()))
     time.sleep(60*10)
