@@ -45,7 +45,7 @@ class _NewKitonDelegate(DefaultDelegate):
         return True
 
 
-class Newkiton(Peripheral):
+class Newkiton(object):
     """
     Class to handle accesses to the NewKiton Bluetooth sensor
     Instanciate the device with deviceAddr argument
@@ -55,26 +55,33 @@ class Newkiton(Peripheral):
     10 minutes
 
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, deviceAddr):
         self.temperatures = {}
-        self.delagate = _NewKitonDelegate()
-        self.setDelegate(self.delagate)
-        self.readings = self.delagate.readings
+        self.deviceAddr = deviceAddr
+        self._periph = None  # type: Peripheral
         self._most_recent_timestmap = datetime.datetime(year=2000, month=1, day=1, hour=1, minute=1, second=1)
         self.temperature()
+
+    def _connect(self):
+        self._periph = Peripheral(deviceAddr=self.deviceAddr)
+        self._delagate = _NewKitonDelegate()
+        self._periph.setDelegate(self._delagate)
+        self.readings = self._delagate.readings
+
+    def _disconnect(self):
+        self._periph.disconnect()
 
     def _get_next_addr(self):
         logging.debug("Getting address of next recording")
         # This seems to trigger the update
-        self.writeCharacteristic(0x25, struct.pack(">H", 0x100), withResponse=True)
-        if self.delagate.read_event.wait(timeout):
-            self.delagate.read_event.clear()
+        self._periph.writeCharacteristic(0x25, struct.pack(">H", 0x100), withResponse=True)
+        if self._delagate.read_event.wait(timeout):
+            self._delagate.read_event.clear()
         # Mow actually read the registers
-        self.writeCharacteristic(0x21, struct.pack(">BHH", 0x1, 0, 0), withResponse=True)
-        if self.delagate.read_event.wait(timeout):
-            self.delagate.read_event.clear()
-            logging.debug("Got last add={:#0X}".format(self.delagate.last_recorded_address))
+        self._periph.writeCharacteristic(0x21, struct.pack(">BHH", 0x1, 0, 0), withResponse=True)
+        if self._delagate.read_event.wait(timeout):
+            self._delagate.read_event.clear()
+            logging.debug("Got last add={:#0X}".format(self._delagate.last_recorded_address))
             self._most_recent_timestmap = datetime.datetime.utcnow()
             return True
         else:
@@ -86,13 +93,13 @@ class Newkiton(Peripheral):
         :param base_address:
         :return:
         """
-        if base_address > self.delagate.last_recorded_address:
+        if base_address > self._delagate.last_recorded_address:
             logging.error("Don't read base the next recorded address")
             return False
         else:
-            self.writeCharacteristic(0x21, struct.pack("<BHHB", 0x7, base_address,  0, 0x7), withResponse=True)
-            if self.delagate.read_event.wait(timeout):
-                self.delagate.read_event.clear()
+            self._periph.writeCharacteristic(0x21, struct.pack("<BHHB", 0x7, base_address,  0, 0x7), withResponse=True)
+            if self._delagate.read_event.wait(timeout):
+                self._delagate.read_event.clear()
                 logging.debug("Poplated temperatures from addr={:#0X}".format(base_address))
                 return True
             else:
@@ -106,10 +113,13 @@ class Newkiton(Peripheral):
         _current_time = datetime.datetime.utcnow()
         if abs(_current_time - self._most_recent_timestmap) < TenMinutes:
             logging.debug("Reading from cache")
-            return self.readings[self.delagate.last_recorded_address]
+            return self.readings[self._delagate.last_recorded_address]
         else:
+            self._connect()
             self._get_next_addr()
-            if self._read_location(self.delagate.last_recorded_address-6):
-                return self.readings[self.delagate.last_recorded_address]
+            if self._read_location(self._delagate.last_recorded_address-6):
+                self._disconnect()
+                return self.readings[self._delagate.last_recorded_address]
             else:
+                self._disconnect()
                 return None
