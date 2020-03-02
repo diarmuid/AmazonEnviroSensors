@@ -10,4 +10,4 @@ logging.basicConfig(level=logging.DEBUG)
 sensor = Newkiton.Newkiton(deviceAddr="8e:f9:00:00:00:ed")
 while True:
     print("Temp={}".format(sensor.temperature()))
-    time.sleep(60*10)
+    time.sleep(30)

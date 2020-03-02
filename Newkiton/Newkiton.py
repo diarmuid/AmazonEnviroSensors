@@ -33,14 +33,14 @@ class _NewKitonDelegate(DefaultDelegate):
             if responses[RESP_OFFSET_CMD] == RESP_CMD_NEXT_ADDR:
                 self.last_recorded_address = responses[RESP_OFFSET_BADDR] - 1
                 logging.debug("Last Recorded Addr={:#0X}".format(self.last_recorded_address))
-            elif responses[RESP_OFFSET_CMD] == RESP_CMD_READ_VALUES:
-                for addr_idx in range(7):
-                    off = addr_idx + 4
-                    decimal = (responses[off] & 0xF) / 16
-                    integer = responses[off] >> 4
-                    temperature = decimal+integer
+            for addr_idx in range(7):
+                off = addr_idx + 4
+                decimal = (responses[off] & 0xF) / 16
+                integer = responses[off] >> 4
+                temperature = decimal+integer
+                if responses[RESP_OFFSET_CMD] == RESP_CMD_READ_VALUES:
                     self.readings[responses[RESP_OFFSET_BADDR] + addr_idx] = temperature
-                    logging.debug("Addr={:#0X} Temp={}".format(responses[RESP_OFFSET_BADDR] + addr_idx, temperature))
+                logging.debug("CMD={:#0X} Addr={:#0X} Temp={}".format(responses[RESP_OFFSET_CMD], responses[RESP_OFFSET_BADDR] + addr_idx, temperature))
         self.read_event.set()
         return True
 
@@ -58,9 +58,10 @@ class Newkiton(Peripheral):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.temperatures = {}
-        self._most_recent_timestmap = None
         self.delagate = _NewKitonDelegate()
         self.setDelegate(self.delagate)
+        self.readings = self.delagate.readings
+        self._most_recent_timestmap = datetime.datetime(year=2000, month=1, day=1, hour=1, minute=1, second=1)
         self.temperature()
 
     def _get_next_addr(self):
@@ -74,6 +75,10 @@ class Newkiton(Peripheral):
         if self.delagate.read_event.wait(timeout):
             self.delagate.read_event.clear()
             logging.debug("Got last add={:#0X}".format(self.delagate.last_recorded_address))
+            self._most_recent_timestmap = datetime.datetime.utcnow()
+            return True
+        else:
+            return False
 
     def _read_location(self, base_address):
         """
@@ -98,16 +103,13 @@ class Newkiton(Peripheral):
         Returns the most recent temperature reading
         :rtype: int
         """
-        _current_time = datetime.datetime.now()
-        if self._most_recent_timestmap is not None and (_current_time - self._most_recent_timestmap) < TenMinutes:
+        _current_time = datetime.datetime.utcnow()
+        if abs(_current_time - self._most_recent_timestmap) < TenMinutes:
             logging.debug("Reading from cache")
-            return self.delagate.readings[self.delagate.last_recorded_address]
+            return self.readings[self.delagate.last_recorded_address]
         else:
             self._get_next_addr()
-            last_set_readings_addr = self.delagate.last_recorded_address - 6
-            if self._read_location(last_set_readings_addr):
-                logging.debug("Readings=" + repr(self.delagate.readings))
-                self._most_recent_timestmap = _current_time
-                return self.delagate.readings[last_set_readings_addr+6]
+            if self._read_location(self.delagate.last_recorded_address-6):
+                return self.readings[self.delagate.last_recorded_address]
             else:
                 return None
