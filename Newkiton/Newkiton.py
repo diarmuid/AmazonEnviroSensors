@@ -60,7 +60,6 @@ class Newkiton(object):
         self.deviceAddr = deviceAddr
         self._periph = None  # type: Peripheral
         self._most_recent_timestmap = datetime.datetime(year=2000, month=1, day=1, hour=1, minute=1, second=1)
-        self.temperature()
 
     def _connect(self):
         self._periph = Peripheral(deviceAddr=self.deviceAddr)
