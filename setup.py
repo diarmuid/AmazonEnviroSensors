@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="Newkiton", # Replace with your own username
-    version="0.0.6",
+    version="0.1.0",
     author="Diarmuid Collins",
     author_email="diarmuid.m.collins+github@gmail.com",
     description="Newkiton temperature sensor",

@@ -26,3 +26,20 @@ while True:
 
 
 `````
+
+# ThermoBeacon
+
+This is another similar device from Amazon which I also bought. I based
+this code from  https://github.com/rnlgreen/thermobeacon
+
+`````python
+from ThermoBeacon import ThermoBeacon
+import time
+
+sensor = ThermoBeacon.ThermoBeacon(deviceAddr="8e:f9:00:00:00:ed")
+while True:
+    print("Temp={}".format(sensor.temperature()))
+    time.sleep(60*10)
+
+
+`````
