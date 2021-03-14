@@ -4,17 +4,17 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="Newkiton", # Replace with your own username
-    version="0.1.0",
+    name="AmazonEnviroSensors", # Replace with your own username
+    version="0.2.0",
     author="Diarmuid Collins",
     author_email="diarmuid.m.collins+github@gmail.com",
-    description="Newkiton temperature sensor",
+    description="Amazon Environmental sensors",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
           'bluepy',
     ],
-    url="https://github.com/diarmuid/Newkiton",
+    url="https://github.com/diarmuid/AmazonEnviroSensors",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

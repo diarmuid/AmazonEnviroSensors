@@ -2,10 +2,12 @@ from bluepy.btle import Scanner, DefaultDelegate, Peripheral, ADDR_TYPE_PUBLIC, 
 import logging
 from collections import namedtuple
 from threading import Event
+import struct
 
 
 Measurement = namedtuple('Measurement', ['temperature', 'humidity', 'batterylevel'])
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+
 
 class _MiDelegate(DefaultDelegate):
     def __init__(self):
@@ -29,7 +31,7 @@ class _MiDelegate(DefaultDelegate):
             pass
 
 
-class MiTemperature2(object):
+class MiTemperature(object):
     ''''
     Class to read the temperature from the MiTemp sensor from Amazon.
     Heavily based on https://github.com/JsBergbau/MiTemperature2 but refactored for my application
@@ -108,20 +110,33 @@ humidityidx = 14
 msg_len = 40
 
 
-class MiTemperature2Scan(object):
+class MiTemperatureATCScan(object):
     ''''
     Scanner reads the broadcast messages but temperature doens't seem to be in it
     '''
-    def __init__(self, deviceAddr):
+    def __init__(self, deviceAddr=None):
         self.scanner = Scanner().withDelegate(ScanDelegate())
         self.addr = deviceAddr
 
-    def read(self):
+    def reading(self):
         rd_data = True
-        while rd_data:
-            for dev in self.scanner.scan(3):
-                #logging.debug("DevAddr={} Add={}".format(dev.addr, self.addr))
+        for dev in self.scanner.scan(5):
+            #logging.debug("DevAddr={} Add={}".format(dev.addr, self.addr))
+            if self.addr is not None:
                 if dev.addr.lower() == self.addr.lower():
+                    logging.debug("Found DEVICE")
                     for (adtype, desc, value) in dev.getScanData():
                         logging.debug("dsc={} val={} len={}".format(desc, value, len(value)))
-                        rd_data = False
+                        if desc == "16b Service Data":
+                            buffer = bytes.fromhex(value)
+                            #buffer = b'\x00' * (16-len(buffer)) + buffer
+                            logging.debug("Buflen={}".format(len(buffer)))
+                            (uuid, _1, _2, temp, humidity, voltage) = struct.unpack_from(">HIHHBB", buffer, 0)
+                            logging.debug("Temp ={} Hum={} Volt={}".format(temp, humidity, voltage))
+                            return Measurement(temp/10.0, humidity, voltage)
+            else:
+                for (adtype, desc, value) in dev.getScanData():
+                    logging.debug("dsc={} val={} len={}".format(desc, value, len(value)))
+
+
+        return None

@@ -43,3 +43,9 @@ while True:
 
 
 `````
+
+# MiTemperature
+
+This is another similar device from Amazon which I also bought. I based
+this code from  https://github.com/JsBergbau/MiTemperature2
+https://www.amazon.fr/gp/product/B082B4X4B2/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1
